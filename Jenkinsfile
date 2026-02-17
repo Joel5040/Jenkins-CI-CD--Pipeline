@@ -13,7 +13,9 @@ node {
         usernameVariable: 'MVN_USERNAME')]) {
 
         sh """
-          mvn clean deploy \
+          echo "Username: ${MVN_USERNAME}"
+          echo "Password length: \${#MVN_PASSWORD}"
+          mvn clean deploy -X \
               -s settings.xml \
               -Drepo.id=github \
               -Drepo.login=${MVN_USERNAME} \
