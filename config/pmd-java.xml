@@ -23,7 +23,7 @@
     <exclude-pattern>.*/net/sourceforge/pmd/lang/java/ast/jdkversiontests/java10/LocalVariableTypeInference_varAsEnumName.java</exclude-pattern>
     <exclude-pattern>.*/net/sourceforge/pmd/lang/java/ast/jdkversiontests/java10/LocalVariableTypeInference_varAsTypeIdentifier.java</exclude-pattern>
 
-    <!-- this file contains are parse error explicitly -->
+    <!-- this file contains a parse error explicitly -->
     <exclude-pattern>.*/net/sourceforge/pmd/lang/java/ast/InfiniteLoopInLookahead.java</exclude-pattern>
 
     <!-- the following files cannot be parsed with the latest java version (19 preview) anymore

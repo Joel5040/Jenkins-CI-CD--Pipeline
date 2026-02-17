@@ -8,7 +8,7 @@ node {
 
   stage('Deploy') {
      withCredentials([usernamePassword(
-        credentialsId: 'github-publish-maven', 
+        credentialsId: 'Freestyle-Pass', 
         passwordVariable: 'MVN_PASSWORD', 
         usernameVariable: 'MVN_USERNAME')]) {
 
