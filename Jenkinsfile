@@ -25,28 +25,6 @@ node {
      }
   }  
 
-  stage('Docker Build') {
-    sh """
-      docker build -t joel5040/jenkins-ci-cd-app:1.${BUILD_NUMBER} .
-      docker tag joel5040/jenkins-ci-cd-app:1.${BUILD_NUMBER} joel5040/jenkins-ci-cd-app:latest
-    """
-  }
-
-  stage('Docker Push') {
-    withCredentials([usernamePassword(
-        credentialsId: 'docker-hub', 
-        passwordVariable: 'DOCKER_PASSWORD', 
-        usernameVariable: 'DOCKER_USERNAME')]) {
-
-        sh """
-          echo ${DOCKER_PASSWORD} | docker login -u ${DOCKER_USERNAME} --password-stdin
-          docker push joel5040/jenkins-ci-cd-app:1.${BUILD_NUMBER}
-          docker push joel5040/jenkins-ci-cd-app:latest
-          docker logout
-        """
-    }
-  }
-
   stage('Post') {
     jacoco()
     junit 'target/surefire-reports/*.xml'
