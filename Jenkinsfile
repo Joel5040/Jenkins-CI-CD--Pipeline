@@ -12,15 +12,13 @@ node {
         passwordVariable: 'MVN_PASSWORD', 
         usernameVariable: 'MVN_USERNAME')]) {
 
-        withMaven(mavenSettingsFilePath: 'settings.xml') {
-          sh """
-            ./mvnw deploy \
-                -Drepo.id=github \
-                -Drepo.login=${MVN_USERNAME} \
-                -Drepo.pwd=${MVN_PASSWORD} \
-                -Drevision=1.${BUILD_NUMBER}
-          """
-        }  
+        sh """
+          mvn clean deploy \
+              -Drepo.id=github \
+              -Drepo.login=${MVN_USERNAME} \
+              -Drepo.pwd=${MVN_PASSWORD} \
+              -Drevision=1.${BUILD_NUMBER}
+        """
      }
   }  
 
