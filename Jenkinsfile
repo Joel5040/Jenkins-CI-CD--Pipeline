@@ -14,6 +14,7 @@ node {
 
         sh """
           mvn clean deploy \
+              -s settings.xml \
               -Drepo.id=github \
               -Drepo.login=${MVN_USERNAME} \
               -Drepo.pwd=${MVN_PASSWORD} \
