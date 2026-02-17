@@ -2,7 +2,7 @@ node {
   
   stage('Clone') {
       dir('.') {
-          git branch: 'main', credentialsId: 'github_com', url: 'git@github.com:jvalentino/example-java-maven-jenkins-scripted.git'
+          git branch: 'main', credentialsId: 'github_com', url: 'git@github.com:Joel5040/Jenkins-CI-CD--Pipeline.git'
       }    
   }       
 
