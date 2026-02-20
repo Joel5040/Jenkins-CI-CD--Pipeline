@@ -1,10 +1,43 @@
-node {
+node('maven') {
   
   stage('Clone') {
       dir('.') {
           git branch: 'main', credentialsId: 'github_com', url: 'git@github.com:Joel5040/Jenkins-CI-CD--Pipeline.git'
       }    
+      // compute a basic fallback dynamic version if GitVersion / Docker isn't available
+      script {
+        def tag = sh(returnStdout: true, script: "git describe --tags --abbrev=0 2>/dev/null || true").trim()
+        def count = sh(returnStdout: true, script: "git rev-list --count HEAD").trim()
+        def sha  = sh(returnStdout: true, script: "git rev-parse --short HEAD").trim()
+        env.DYNAMIC_VERSION = tag ? "${tag}.${count}-${sha}" : "0.1.0-${count}-${sha}"
+        echo "Initial computed dynamic version (fallback): ${env.DYNAMIC_VERSION}"
+      }
   }       
+
+  stage('ResolveVersion') {
+    steps {
+      script {
+        try {
+          // Try using GitVersion (Docker image) to get structured version fields
+          def json = sh(returnStdout: true, script: "docker run --rm -v \${WORKSPACE}:/repo -w /repo gittools/gitversion:5 /repo /output json").trim()
+          def parsed = readJSON text: json
+          env.MAJOR = parsed.Major.toString()
+          env.MINOR = parsed.Minor.toString()
+          env.PATCH = parsed.Patch.toString()
+          // compute next incremental (example: next patch)
+          env.NEXT_INCREMENTAL = (parsed.Patch + 1).toString()
+          // prefer ShortSha from GitVersion if present
+          def shortSha = parsed.ShortSha ?: parsed.Sha?.substring(0,7) ?: sh(returnStdout: true, script: "git rev-parse --short HEAD").trim()
+          env.SHORT_SHA = shortSha
+          env.DYNAMIC_VERSION = "${env.MAJOR}.${env.MINOR}.${env.NEXT_INCREMENTAL}-${env.SHORT_SHA}"
+          echo "Version resolved via GitVersion: ${env.DYNAMIC_VERSION}"
+        } catch (err) {
+          echo "GitVersion/Docker not available or failed: ${err}"
+          echo "Using fallback dynamic version: ${env.DYNAMIC_VERSION}"
+        }
+      }
+    }
+  }
 
   stage('Deploy') {
      withCredentials([usernamePassword(
@@ -12,15 +45,17 @@ node {
         passwordVariable: 'MVN_PASSWORD', 
         usernameVariable: 'MVN_USERNAME')]) {
 
+        sh 'chmod +x ./mvnw'
+
         sh """
           echo "Username: ${MVN_USERNAME}"
           echo "Password length: \${#MVN_PASSWORD}"
-          mvn clean deploy -X \
+          ./mvnw -B clean deploy -X \
               -s settings.xml \
               -Drepo.id=github \
               -Drepo.login=${MVN_USERNAME} \
               -Drepo.pwd=${MVN_PASSWORD} \
-              -Drevision=1.${BUILD_NUMBER}
+              -Drevision=${env.DYNAMIC_VERSION}
         """
      }
   }  
