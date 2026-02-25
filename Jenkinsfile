@@ -66,8 +66,7 @@ pipeline {
             steps {
                 jacoco()
                 junit 'target/surefire-reports/*.xml'
-                def pmd = scanForIssues tool: [$class: 'Pmd'], pattern: 'target/pmd.xml'
-                publishIssues issues: [pmd]
+                publishIssues issues: [scanForIssues tool: pmd(pattern: 'target/pmd.xml')]
             }
         }
     }
