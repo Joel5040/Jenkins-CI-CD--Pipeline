@@ -1,18 +1,5 @@
-node('maven') {
-  
-  stage('Clone') {
-      dir('.') {
-          git branch: 'main', credentialsId: 'github_com', url: 'git@github.com:Joel5040/Jenkins-CI-CD--Pipeline.git'
-      }    
-      // compute a basic fallback dynamic version if GitVersion / Docker isn't available
-      script {
-        def tag = sh(returnStdout: true, script: "git describe --tags --abbrev=0 2>/dev/null || true").trim()
-        def count = sh(returnStdout: true, script: "git rev-list --count HEAD").trim()
-        def sha  = sh(returnStdout: true, script: "git rev-parse --short HEAD").trim()
-        env.DYNAMIC_VERSION = tag ? "${tag}.${count}-${sha}" : "0.1.0-${count}-${sha}"
-        echo "Initial computed dynamic version (fallback): ${env.DYNAMIC_VERSION}"
-      }
-  }       
+pipeline {
+    agent any
 
   stage('ResolveVersion') {
     steps {
@@ -40,36 +27,36 @@ node('maven') {
           echo "Using fallback dynamic version: ${env.DYNAMIC_VERSION}"
           echo "Using fallback dynamic version: ${env.DYNAMIC_VERSION}"
         }
-      }
+
+        stage('Deploy') {
+            steps {
+                withCredentials([usernamePassword(
+                    credentialsId: 'Freestyle-Pass',
+                    passwordVariable: 'MVN_PASSWORD',
+                    usernameVariable: 'MVN_USERNAME')]) {
+
+                    sh 'chmod +x ./mvnw'
+
+                    sh """
+                      echo "Username: ${MVN_USERNAME}"
+                      echo "Password length: \${#MVN_PASSWORD}"
+                      ./mvnw -B clean deploy -X \
+                          -s settings.xml \
+                          -Drepo.id=github \
+                          -Drepo.login=${MVN_USERNAME} \
+                          -Drepo.pwd=${MVN_PASSWORD} \
+                          -Drevision=${env.DYNAMIC_VERSION}
+                    """
+                }
+            }
+        }
+
+        stage('Post') {
+            steps {
+                jacoco()
+                junit 'target/surefire-reports/*.xml'
+                publishIssues issues: [scanForIssues(tool: pmd(pattern: 'target/pmd.xml'))]
+            }
+        }
     }
-  }
-
-  stage('Deploy') {
-     withCredentials([usernamePassword(
-        credentialsId: 'Freestyle-Pass', 
-        passwordVariable: 'MVN_PASSWORD', 
-        usernameVariable: 'MVN_USERNAME')]) {
-
-        sh 'chmod +x ./mvnw'
-
-        sh """
-          echo "Username: ${MVN_USERNAME}"
-          echo "Password length: \${#MVN_PASSWORD}"
-          ./mvnw -B clean deploy -X \
-              -s settings.xml \
-              -Drepo.id=github \
-              -Drepo.login=${MVN_USERNAME} \
-              -Drepo.pwd=${MVN_PASSWORD} \
-              -Drevision=${env.DYNAMIC_VERSION}
-        """
-     }
-  }  
-
-  stage('Post') {
-    jacoco()
-    junit 'target/surefire-reports/*.xml'
-    def pmd = scanForIssues tool: [$class: 'Pmd'], pattern: 'target/pmd.xml'
-    publishIssues issues: [pmd]
-  }
-  
 }
