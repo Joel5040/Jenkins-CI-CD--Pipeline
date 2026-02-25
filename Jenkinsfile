@@ -1,31 +1,27 @@
 pipeline {
     agent any
 
-  stage('ResolveVersion') {
-    steps {
-      script {
-        try {
-          // Try using GitVersion (Docker image) to get structured version fields
-          def json = sh(returnStdout: true, script: "docker run --rm -v \${WORKSPACE}:/repo -w /repo gittools/gitversion:5 /repo /output json").trim()
-          def parsed = readJSON text: json
-          env.MAJOR = parsed.Major.toString()
-          env.MINOR = parsed.Minor.toString()
-          env.PATCH = parsed.Patch.toString()
-          // compute next incremental (example: next patch)
-          env.NEXT_INCREMENTAL = (parsed.Patch + 1).toString()
-          // prefer ShortSha from GitVersion if present
-          def shortSha = parsed.ShortSha ?: parsed.Sha?.substring(0,7) ?: sh(returnStdout: true, script: "git rev-parse --short HEAD").trim()
-          env.SHORT_SHA = shortSha
-          env.DYNAMIC_VERSION = "${env.MAJOR}.${env.MINOR}.${env.NEXT_INCREMENTAL}-${env.SHORT_SHA}"
-          echo "Version resolved via GitVersion: ${env.DYNAMIC_VERSION}"
-        } catch (err) {
-          echo "GitVersion/Docker not available or failed: ${err}"
-          echo "Using fallback dynamic version: ${env.DYNAMIC_VERSION}"
-          echo "Using fallback dynamic version: ${env.DYNAMIC_VERSION}"
-          echo "Using fallback dynamic version: ${env.DYNAMIC_VERSION}"
-          echo "Using fallback dynamic version: ${env.DYNAMIC_VERSION}"
-          echo "Using fallback dynamic version: ${env.DYNAMIC_VERSION}"
-          echo "Using fallback dynamic version: ${env.DYNAMIC_VERSION}"
+    stages {
+        stage('ResolveVersion') {
+            steps {
+                script {
+                    try {
+                        def json = sh(returnStdout: true, script: "docker run --rm -v ${WORKSPACE}:/repo -w /repo gittools/gitversion:5 /repo /output json").trim()
+                        def parsed = readJSON text: json
+                        env.MAJOR = parsed.Major.toString()
+                        env.MINOR = parsed.Minor.toString()
+                        env.PATCH = parsed.Patch.toString()
+                        env.NEXT_INCREMENTAL = (parsed.Patch + 1).toString()
+                        def shortSha = parsed.ShortSha ?: parsed.Sha?.substring(0,7) ?: sh(returnStdout: true, script: "git rev-parse --short HEAD").trim()
+                        env.SHORT_SHA = shortSha
+                        env.DYNAMIC_VERSION = "${env.MAJOR}.${env.MINOR}.${env.NEXT_INCREMENTAL}-${env.SHORT_SHA}"
+                        echo "Version resolved via GitVersion: ${env.DYNAMIC_VERSION}"
+                    } catch (err) {
+                        echo "GitVersion/Docker not available or failed: ${err}"
+                        echo "Using fallback dynamic version: ${env.DYNAMIC_VERSION}"
+                    }
+                }
+            }
         }
 
         stage('Deploy') {
