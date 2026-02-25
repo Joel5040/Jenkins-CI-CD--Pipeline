@@ -13,6 +13,8 @@ pipeline {
                     def sha  = sh(returnStdout: true, script: "git rev-parse --short HEAD").trim()
                     env.DYNAMIC_VERSION = tag ? "${tag}.${count}-${sha}" : "0.1.0-${count}-${sha}"
                     echo "Initial computed dynamic version (fallback): ${env.DYNAMIC_VERSION}"
+                    echo "Initial computed dynamic version (fallback): ${env.DYNAMIC_VERSION}"
+                    echo "Initial computed dynamic version (fallback): ${env.DYNAMIC_VERSION}"
                 }
             }
         }
