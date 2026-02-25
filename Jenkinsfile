@@ -34,6 +34,11 @@ node('maven') {
         } catch (err) {
           echo "GitVersion/Docker not available or failed: ${err}"
           echo "Using fallback dynamic version: ${env.DYNAMIC_VERSION}"
+          echo "Using fallback dynamic version: ${env.DYNAMIC_VERSION}"
+          echo "Using fallback dynamic version: ${env.DYNAMIC_VERSION}"
+          echo "Using fallback dynamic version: ${env.DYNAMIC_VERSION}"
+          echo "Using fallback dynamic version: ${env.DYNAMIC_VERSION}"
+          echo "Using fallback dynamic version: ${env.DYNAMIC_VERSION}"
         }
       }
     }
